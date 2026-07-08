@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+html, body { margin: 0; padding: 0; background: #FDF6EC; }
+* { box-sizing: border-box; }
+a { color: #E5735C; } a:hover { color: #C9553F; }
+@keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes floatBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; font-family: 'Baloo 2', sans-serif; background: #FDF6EC; display: flex; flex-direction: column; align-items: center; padding: 20px 12px 32px; color: #5B4636;">
+
+  <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px;">
+    <div style="font-size: 34px; font-weight: 800; letter-spacing: 0.5px; color: #E5735C;">Fruit Frenzy</div>
+    <div style="font-size: 16px; font-weight: 600; color: #B99C82;">drop &middot; chain &middot; explode</div>
+  </div>
+
+  <div style="display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; justify-content: center;">
+
+    <!-- Left panel: score + next -->
+    <div style="display: flex; flex-direction: column; gap: 14px; width: 150px;">
+      <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 14px 16px; text-align: center;">
+        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Score</div>
+        <div style="font-size: 34px; font-weight: 800; line-height: 1.1; color: #5B4636;">{{ score }}</div>
+      </div>
+      <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
+        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Best</div>
+        <div style="font-size: 24px; font-weight: 800; color: #E5A05C;">{{ best }}</div>
+      </div>
+      <div style="background: {{ comboBg }}; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
+        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Combo</div>
+        <div style="font-size: 24px; font-weight: 800; color: #E5735C;">&times;{{ combo }}</div>
+        <div style="font-size: 11px; font-weight: 700; color: #B99C82;">chain 3 &rarr; bomb!</div>
+      </div>
+      <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
+        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82; margin-bottom: 8px;">Next</div>
+        <div style="height: 64px; display: flex; align-items: center; justify-content: center;">
+          <div style="width: {{ nextSizePx }}; height: {{ nextSizePx }}; border-radius: 50%; background: {{ nextColor }}; border: 3px solid rgba(0,0,0,0.08); animation: floatBob 2.2s ease-in-out infinite; position: relative;">
+            <div style="position: absolute; left: 28%; top: 38%; width: 5px; height: 7px; border-radius: 50%; background: #4A3728;"></div>
+            <div style="position: absolute; right: 28%; top: 38%; width: 5px; height: 7px; border-radius: 50%; background: #4A3728;"></div>
+            <div style="position: absolute; left: 50%; top: 58%; width: 10px; height: 5px; border-radius: 0 0 10px 10px; background: #4A3728; transform: translateX(-50%);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Board -->
+    <div style="position: relative;">
+      <div style="background: #FFF3E0; border: 4px solid #E8C9A0; border-radius: 24px; padding: 8px; box-shadow: 0 6px 0 rgba(232,201,160,0.5);">
+        <canvas ref="{{ canvasRef }}" width="480" height="640" style="display: block; width: min(480px, calc(100vw - 48px)); height: auto; border-radius: 16px; touch-action: none; cursor: crosshair;"></canvas>
+      </div>
+
+      <sc-if value="{{ gameOver }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; inset: 8px; border-radius: 20px; background: rgba(91,70,54,0.55); display: flex; align-items: center; justify-content: center;">
+          <div style="background: #FFFDF8; border-radius: 24px; padding: 28px 36px; text-align: center; animation: popIn 0.35s ease-out; border: 4px solid #F2DDC4;">
+            <div style="font-size: 30px; font-weight: 800; color: #E5735C; margin-bottom: 4px;">Game Over!</div>
+            <div style="font-size: 16px; font-weight: 600; color: #B99C82; margin-bottom: 2px;">final score</div>
+            <div style="font-size: 40px; font-weight: 800; color: #5B4636; margin-bottom: 16px;">{{ score }}</div>
+            <button onClick="{{ restart }}" style="font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 999px; padding: 12px 32px; cursor: pointer; box-shadow: 0 4px 0 #C9553F;">Play again</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- Evolution chart -->
+    <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 14px 18px; width: 130px;">
+      <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82; text-align: center; margin-bottom: 10px;">Evolution</div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 14px; height: 14px; border-radius: 50%; background: #F27E93; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 18px; height: 18px; border-radius: 50%; background: #EF5D74; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 22px; height: 22px; border-radius: 50%; background: #B197FC; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 26px; height: 26px; border-radius: 50%; background: #FFC15C; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 31px; height: 31px; border-radius: 50%; background: #FF9F43; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: #F2695C; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 42px; height: 42px; border-radius: 50%; background: #C9E265; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: #FFBBA6; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 55px; height: 55px; border-radius: 50%; background: #FFD966; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 62px; height: 62px; border-radius: 50%; background: #A8E6A1; border: 2px solid rgba(0,0,0,0.08);"></div>
+        <div style="width: 70px; height: 70px; border-radius: 50%; background: #63C168; border: 2px solid rgba(0,0,0,0.08); position: relative; overflow: hidden;">
+          <div style="position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 8px, rgba(30,90,40,0.25) 8px 13px);"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top: 14px; font-size: 14px; font-weight: 600; color: #B99C82;">Move to aim &middot; click or tap to drop &middot; stay under the dashed line!</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;bounciness&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.45, &quot;min&quot;: 0.05, &quot;max&quot;: 0.8, &quot;step&quot;: 0.05, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Physics&quot;}, &quot;soundEnabled&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Audio&quot;}}">
+const TIERS = [
+  { r: 14,  color: '#F27E93', dark: '#D65B72', score: 1,   name: 'Cherry' },
+  { r: 20,  color: '#EF5D74', dark: '#C94258', score: 3,   name: 'Berry' },
+  { r: 27,  color: '#B197FC', dark: '#8E72E0', score: 6,   name: 'Grape' },
+  { r: 35,  color: '#FFC15C', dark: '#E0A03A', score: 10,  name: 'Clementine' },
+  { r: 44,  color: '#FF9F43', dark: '#DE7F24', score: 15,  name: 'Orange' },
+  { r: 54,  color: '#F2695C', dark: '#CE4A3E', score: 21,  name: 'Apple' },
+  { r: 65,  color: '#C9E265', dark: '#A3BE43', score: 28,  name: 'Pear' },
+  { r: 77,  color: '#FFBBA6', dark: '#E29580', score: 36,  name: 'Peach' },
+  { r: 90,  color: '#FFD966', dark: '#DDB43F', score: 45,  name: 'Pineapple' },
+  { r: 104, color: '#A8E6A1', dark: '#7FC479', score: 55,  name: 'Melon' },
+  { r: 120, color: '#63C168', dark: '#469A4C', score: 100, name: 'Watermelon' }
+];
+const W = 480, H = 640, LINE_Y = 110, DROP_Y = 62, BOMB_R = 26;
+
+class Component extends DCLogic {
+  state = {
+    score: 0,
+    best: Number(localStorage.getItem('fruitMergeBest') || 0),
+    nextTier: 0,
+    gameOver: false,
+    combo: 1
+  };
+
+  canvasRef = (el) => { this.canvas = el; };
+
+  componentDidMount() {
+    this.fruits = [];
+    this.particles = [];
+    this.canDrop = true;
+    this.aimX = W / 2;
+    this.currentTier = this.randTier();
+    this.setState({ nextTier: this.randTier() });
+    this.overTimer = 0;
+    this.lastT = performance.now();
+    this.audio = null;
+    this.chain = 0;
+    this.lastMergeAt = 0;
+    this.floaters = [];
+    this.bombPending = false;
+
+    const c = this.canvas;
+    const getX = (e) => {
+      const rect = c.getBoundingClientRect();
+      const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      return cx * (W / rect.width);
+    };
+    this.onMove = (e) => { this.aimX = getX(e); };
+    this.onDown = (e) => { e.preventDefault(); this.aimX = getX(e); this.drop(); };
+    c.addEventListener('pointermove', this.onMove);
+    c.addEventListener('pointerdown', this.onDown);
+
+    this.raf = requestAnimationFrame(this.loop);
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf);
+    if (this.canvas) {
+      this.canvas.removeEventListener('pointermove', this.onMove);
+      this.canvas.removeEventListener('pointerdown', this.onDown);
+    }
+  }
+
+  randTier() { return Math.floor(Math.random() * 5); }
+
+  bounciness() { return this.props.bounciness ?? 0.45; }
+
+  // ---- sound ----
+  beep(freq, dur, type, vol) {
+    if (!(this.props.soundEnabled ?? true)) return;
+    try {
+      if (!this.audio) this.audio = new (window.AudioContext || window.webkitAudioContext)();
+      const a = this.audio;
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol || 0.12, a.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+      o.connect(g); g.connect(a.destination);
+      o.start(); o.stop(a.currentTime + dur);
+    } catch (e) {}
+  }
+  popSound(tier) {
+    this.beep(320 + tier * 45, 0.12, 'sine', 0.1);
+  }
+  mergeSound(tier) {
+    this.beep(380 + tier * 40, 0.14, 'triangle', 0.14);
+    setTimeout(() => this.beep(560 + tier * 50, 0.18, 'triangle', 0.12), 70);
+  }
+
+  // ---- game actions ----
+  drop() {
+    if (!this.canDrop || this.state.gameOver) return;
+    if (this.currentTier === 'bomb') {
+      const x = Math.max(BOMB_R + 4, Math.min(W - BOMB_R - 4, this.aimX));
+      this.fruits.push({ x, y: DROP_Y, vx: 0, vy: 60, tier: 0, bomb: true, born: performance.now(), squish: 0 });
+      this.beep(180, 0.2, 'square', 0.08);
+    } else {
+      const t = TIERS[this.currentTier];
+      const x = Math.max(t.r + 4, Math.min(W - t.r - 4, this.aimX));
+      this.fruits.push({ x, y: DROP_Y, vx: 0, vy: 60, tier: this.currentTier, born: performance.now(), squish: 0 });
+      this.popSound(this.currentTier);
+    }
+    this.canDrop = false;
+    if (this.bombPending) {
+      this.bombPending = false;
+      this.currentTier = 'bomb';
+      setTimeout(() => { this.canDrop = true; }, 480);
+    } else {
+      this.currentTier = this.state.nextTier;
+      setTimeout(() => {
+        this.canDrop = true;
+        this.setState({ nextTier: this.randTier() });
+      }, 480);
+    }
+  }
+
+  restart = () => {
+    this.fruits = [];
+    this.particles = [];
+    this.floaters = [];
+    this.overTimer = 0;
+    this.chain = 0;
+    this.bombPending = false;
+    this.canDrop = true;
+    this.currentTier = this.randTier();
+    this.setState({ score: 0, gameOver: false, nextTier: this.randTier(), combo: 1 });
+  };
+
+  addScore(pts) {
+    const score = this.state.score + pts;
+    let best = this.state.best;
+    if (score > best) { best = score; localStorage.setItem('fruitMergeBest', String(best)); }
+    this.setState({ score, best });
+  }
+
+  spawnParticles(x, y, color, r) {
+    for (let i = 0; i < 12; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 60 + Math.random() * 180;
+      this.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, life: 1, size: 3 + Math.random() * (r * 0.12), color });
+    }
+  }
+
+  // ---- physics ----
+  step(dt) {
+    const fruits = this.fruits;
+    const rest = this.bounciness();
+    const g = 1900;
+    const sub = 3, sdt = dt / sub;
+
+    for (let s = 0; s < sub; s++) {
+      for (const f of fruits) {
+        f.vy += g * sdt;
+        f.vx *= (1 - 0.12 * sdt);
+        f.x += f.vx * sdt;
+        f.y += f.vy * sdt;
+        const r = TIERS[f.tier].r;
+        if (f.x < r) { f.x = r; f.vx = Math.abs(f.vx) * rest; }
+        if (f.x > W - r) { f.x = W - r; f.vx = -Math.abs(f.vx) * rest; }
+        if (f.y > H - r) {
+          if (f.bomb && !f.dead) { this.explode(f); continue; }
+          f.y = H - r; f.vy = -Math.abs(f.vy) * rest; f.vx *= 0.92; if (Math.abs(f.vy) < 30) f.vy = 0;
+        }
+        if (f.squish > 0) f.squish = Math.max(0, f.squish - dt * 3);
+      }
+
+      // pairwise
+      for (let i = 0; i < fruits.length; i++) {
+        for (let j = i + 1; j < fruits.length; j++) {
+          const A = fruits[i], B = fruits[j];
+          if (A.dead || B.dead) continue;
+          const ra = TIERS[A.tier].r, rb = TIERS[B.tier].r;
+          let dx = B.x - A.x, dy = B.y - A.y;
+          let d = Math.hypot(dx, dy);
+          const min = ra + rb;
+          if (d >= min) continue;
+          if (d < 0.01) { d = 0.01; dx = 0.01; dy = 0; }
+          const nx = dx / d, ny = dy / d;
+
+          if (A.bomb || B.bomb) {
+            this.explode(A.bomb ? A : B);
+            continue;
+          }
+          if (A.tier === B.tier && A.tier < TIERS.length - 1) {
+            this.merge(A, B);
+            continue;
+          }
+          if (A.tier === B.tier && A.tier === TIERS.length - 1) {
+            // two watermelons vanish!
+            A.dead = B.dead = true;
+            this.spawnParticles((A.x + B.x) / 2, (A.y + B.y) / 2, TIERS[A.tier].color, 60);
+            this.mergeSound(10);
+            this.addScore(200);
+            continue;
+          }
+
+          const ma = ra * ra, mb = rb * rb, tm = ma + mb;
+          const overlap = min - d;
+          A.x -= nx * overlap * (mb / tm);
+          A.y -= ny * overlap * (mb / tm);
+          B.x += nx * overlap * (ma / tm);
+          B.y += ny * overlap * (ma / tm);
+          const rvx = B.vx - A.vx, rvy = B.vy - A.vy;
+          const vn = rvx * nx + rvy * ny;
+          if (vn < 0) {
+            const imp = -(1 + rest) * vn / (1 / ma + 1 / mb);
+            A.vx -= imp * nx / ma; A.vy -= imp * ny / ma;
+            B.vx += imp * nx / mb; B.vy += imp * ny / mb;
+          }
+        }
+      }
+      this.fruits = this.fruits.filter(f => !f.dead);
+    }
+
+    // chain expiry
+    if (this.chain > 0 && performance.now() - this.lastMergeAt > 1600) {
+      this.chain = 0;
+      if (this.state.combo !== 1) this.setState({ combo: 1 });
+    }
+
+    // floaters
+    for (const fl of this.floaters) { fl.y -= 50 * dt; fl.life -= dt * 0.9; }
+    this.floaters = this.floaters.filter(fl => fl.life > 0);
+
+    // particles
+    for (const p of this.particles) {
+      p.vy += 900 * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.life -= dt * 1.8;
+    }
+    this.particles = this.particles.filter(p => p.life > 0);
+
+    // game over check
+    const now = performance.now();
+    let danger = false;
+    for (const f of this.fruits) {
+      const r = TIERS[f.tier].r;
+      if (f.y - r < LINE_Y && now - f.born > 1400 && Math.abs(f.vy) < 120) { danger = true; break; }
+    }
+    if (danger) {
+      this.overTimer += dt;
+      if (this.overTimer > 1.0 && !this.state.gameOver) {
+        this.setState({ gameOver: true });
+        this.beep(220, 0.4, 'sawtooth', 0.08);
+      }
+    } else this.overTimer = 0;
+  }
+
+  merge(A, B) {
+    A.dead = B.dead = true;
+    const nt = A.tier + 1;
+    const ma = TIERS[A.tier].r ** 2, mb = TIERS[B.tier].r ** 2;
+    const x = (A.x * ma + B.x * mb) / (ma + mb);
+    const y = (A.y * ma + B.y * mb) / (ma + mb);
+    const nf = { x, y: Math.min(y, H - TIERS[nt].r), vx: (A.vx + B.vx) / 2, vy: (A.vy + B.vy) / 2 - 40, tier: nt, born: performance.now(), squish: 1 };
+    this.fruits.push(nf);
+    this.spawnParticles(x, y, TIERS[nt].color, TIERS[nt].r);
+    this.mergeSound(nt);
+
+    // chain combo
+    const now = performance.now();
+    this.chain = (now - this.lastMergeAt < 1600) ? this.chain + 1 : 1;
+    this.lastMergeAt = now;
+    const pts = TIERS[nt].score * this.chain;
+    this.addScore(pts);
+    if (this.state.combo !== this.chain) this.setState({ combo: this.chain });
+    if (this.chain >= 2) this.floaters.push({ x, y: y - TIERS[nt].r - 10, text: '\u00d7' + this.chain + '  +' + pts, life: 1, color: '#E5735C', size: 22 + this.chain * 3 });
+    if (this.chain >= 3 && !this.bombPending && this.currentTier !== 'bomb') {
+      this.bombPending = true;
+      this.floaters.push({ x: W / 2, y: 200, text: 'FRENZY BOMB READY!', life: 1.6, color: '#B197FC', size: 30 });
+      this.beep(700, 0.25, 'triangle', 0.14);
+      setTimeout(() => this.beep(940, 0.3, 'triangle', 0.12), 120);
+    }
+  }
+
+  explode(b) {
+    if (b.dead) return;
+    b.dead = true;
+    const RADIUS = 135;
+    let pts = 0, n = 0;
+    for (const f of this.fruits) {
+      if (f === b || f.dead) continue;
+      if (Math.hypot(f.x - b.x, f.y - b.y) < RADIUS + TIERS[f.tier].r * 0.5) {
+        f.dead = true; n++;
+        pts += 5 + TIERS[f.tier].score;
+        this.spawnParticles(f.x, f.y, TIERS[f.tier].color, TIERS[f.tier].r);
+      }
+    }
+    // shockwave particles
+    for (let i = 0; i < 26; i++) {
+      const a = (i / 26) * Math.PI * 2;
+      this.particles.push({ x: b.x, y: b.y, vx: Math.cos(a) * 320, vy: Math.sin(a) * 320, life: 0.9, size: 5, color: i % 2 ? '#FFD966' : '#B197FC' });
+    }
+    if (pts > 0) {
+      this.addScore(pts);
+      this.floaters.push({ x: b.x, y: b.y - 40, text: 'BOOM! +' + pts, life: 1.4, color: '#E5735C', size: 30 });
+    }
+    this.beep(90, 0.5, 'sawtooth', 0.18);
+    this.beep(240, 0.3, 'square', 0.1);
+  }
+
+  drawBomb(ctx, x, y, r) {
+    ctx.save();
+    ctx.translate(x, y);
+    const pulse = 1 + Math.sin(performance.now() / 120) * 0.06;
+    ctx.scale(pulse, pulse);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#B197FC'; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#8E72E0'; ctx.stroke();
+    // sparkle dots
+    ctx.fillStyle = '#FFD966';
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + performance.now() / 400;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+    // face: gleeful
+    ctx.fillStyle = '#4A3728';
+    ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.1, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.1, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, r * 0.12, r * 0.28, 0.1 * Math.PI, 0.9 * Math.PI);
+    ctx.lineWidth = 3; ctx.strokeStyle = '#4A3728'; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---- rendering ----
+  loop = (t) => {
+    const dt = Math.min(0.033, (t - this.lastT) / 1000);
+    this.lastT = t;
+    if (!this.state.gameOver) this.step(dt);
+    this.draw();
+    this.raf = requestAnimationFrame(this.loop);
+  };
+
+  drawFruit(ctx, x, y, tier, squish) {
+    const T = TIERS[tier];
+    const r = T.r;
+    ctx.save();
+    ctx.translate(x, y);
+    const sq = 1 + squish * 0.15;
+    ctx.scale(sq, 2 - sq);
+    // body
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = T.color; ctx.fill();
+    ctx.lineWidth = Math.max(2, r * 0.06);
+    ctx.strokeStyle = T.dark; ctx.stroke();
+    // watermelon stripes
+    if (tier === TIERS.length - 1) {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(0, 0, r - 2, 0, Math.PI * 2); ctx.clip();
+      ctx.strokeStyle = 'rgba(30,90,40,0.30)';
+      ctx.lineWidth = r * 0.13;
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * r * 0.42, -r);
+        ctx.quadraticCurveTo(i * r * 0.62, 0, i * r * 0.42, r);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // highlight
+    ctx.beginPath(); ctx.arc(-r * 0.35, -r * 0.4, r * 0.22, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
+    // leaf
+    ctx.save();
+    ctx.translate(r * 0.15, -r * 0.92);
+    ctx.rotate(-0.5);
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 0.28, r * 0.13, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#6DBB5E'; ctx.fill();
+    ctx.restore();
+    // face
+    const er = Math.max(2, r * 0.09);
+    ctx.fillStyle = '#4A3728';
+    ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.08, er, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.08, er, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, r * 0.14, r * 0.22, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.lineWidth = Math.max(2, r * 0.06); ctx.strokeStyle = '#4A3728'; ctx.lineCap = 'round'; ctx.stroke();
+    // blush
+    ctx.fillStyle = 'rgba(255,120,120,0.35)';
+    ctx.beginPath(); ctx.ellipse(-r * 0.52, r * 0.12, r * 0.13, r * 0.08, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(r * 0.52, r * 0.12, r * 0.13, r * 0.08, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  draw() {
+    const c = this.canvas;
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    // background
+    ctx.fillStyle = '#FFF9EF';
+    ctx.fillRect(0, 0, W, H);
+
+    // danger line
+    ctx.save();
+    ctx.setLineDash([10, 8]);
+    ctx.strokeStyle = this.overTimer > 0 ? '#E5735C' : '#E8C9A0';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, LINE_Y); ctx.lineTo(W, LINE_Y); ctx.stroke();
+    ctx.restore();
+
+    // aim guide + held fruit
+    if (this.canDrop && !this.state.gameOver) {
+      const isBomb = this.currentTier === 'bomb';
+      const r = isBomb ? BOMB_R : TIERS[this.currentTier].r;
+      const x = Math.max(r + 4, Math.min(W - r - 4, this.aimX));
+      ctx.save();
+      ctx.setLineDash([4, 8]);
+      ctx.strokeStyle = isBomb ? 'rgba(177,151,252,0.7)' : 'rgba(185,156,130,0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, DROP_Y + r); ctx.lineTo(x, H); ctx.stroke();
+      ctx.restore();
+      if (isBomb) this.drawBomb(ctx, x, DROP_Y, BOMB_R);
+      else this.drawFruit(ctx, x, DROP_Y, this.currentTier, 0);
+    }
+
+    // fruits
+    for (const f of this.fruits) {
+      if (f.bomb) this.drawBomb(ctx, f.x, f.y, BOMB_R);
+      else this.drawFruit(ctx, f.x, f.y, f.tier, f.squish);
+    }
+
+    // particles
+    for (const p of this.particles) {
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // floating combo text
+    for (const fl of this.floaters) {
+      ctx.globalAlpha = Math.max(0, Math.min(1, fl.life));
+      ctx.font = '800 ' + fl.size + "px 'Baloo 2', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 5; ctx.strokeStyle = '#FFFDF8'; ctx.lineJoin = 'round';
+      ctx.strokeText(fl.text, fl.x, fl.y);
+      ctx.fillStyle = fl.color;
+      ctx.fillText(fl.text, fl.x, fl.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  renderVals() {
+    const nt = TIERS[this.state.nextTier] || TIERS[0];
+    return {
+      score: this.state.score,
+      best: this.state.best,
+      gameOver: this.state.gameOver,
+      canvasRef: this.canvasRef,
+      restart: this.restart,
+      nextColor: nt.color,
+      nextSizePx: Math.round(nt.r * 1.4) + 'px',
+      combo: this.state.combo,
+      comboBg: this.state.combo >= 2 ? '#F5EDFF' : '#FFFFFF'
+    };
+  }
+}
+
+</script>
+</body>
+</html>
