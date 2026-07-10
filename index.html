@@ -16,99 +16,212 @@ html, body { margin: 0; padding: 0; background: #FDF6EC; }
 a { color: #E5735C; } a:hover { color: #C9553F; }
 @keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
 @keyframes floatBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 </style>
 </helmet>
 
 <div style="min-height: 100vh; font-family: 'Baloo 2', sans-serif; background: #FDF6EC; display: flex; flex-direction: column; align-items: center; padding: 20px 12px 32px; color: #5B4636;">
 
-  <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px;">
+  <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center;">
     <div style="font-size: 34px; font-weight: 800; letter-spacing: 0.5px; color: #E5735C;">Fruit Frenzy</div>
     <div style="font-size: 16px; font-weight: 600; color: #B99C82;">drop &middot; chain &middot; explode</div>
+    <button onClick="{{ toggleMute }}" style="font-family: 'Baloo 2', sans-serif; font-size: 13px; font-weight: 800; color: #8A6F58; background: #FFFFFF; border: 2px solid #F2DDC4; border-radius: 999px; padding: 6px 14px; cursor: pointer;">{{ muteLabel }}</button>
+    <sc-if value="{{ showExit }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ backToMenu }}" style="font-family: 'Baloo 2', sans-serif; font-size: 13px; font-weight: 800; color: #FFFFFF; background: #C9A27A; border: none; border-radius: 999px; padding: 6px 14px; cursor: pointer;">&larr; Menu</button>
+    </sc-if>
   </div>
 
-  <div style="display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; justify-content: center;">
+  <!-- ============ MENU ============ -->
+  <sc-if value="{{ showMenu }}" hint-placeholder-val="{{ true }}">
+    <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 26px; padding: 30px 34px; max-width: 460px; width: 100%; text-align: center; animation: popIn 0.3s ease-out; box-shadow: 0 6px 0 rgba(232,201,160,0.5);">
+      <div style="font-size: 22px; font-weight: 800; color: #5B4636; margin-bottom: 4px;">Choose a mode</div>
+      <div style="font-size: 14px; font-weight: 600; color: #B99C82; margin-bottom: 22px;">Play solo, share a keyboard, or duel online.</div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button onClick="{{ startSingle }}" style="font-family: 'Baloo 2', sans-serif; font-size: 19px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 18px; padding: 15px; cursor: pointer; box-shadow: 0 4px 0 #C9553F;">1 Player</button>
+        <button onClick="{{ startLocal }}" style="font-family: 'Baloo 2', sans-serif; font-size: 19px; font-weight: 800; color: #FFFFFF; background: #6DBB8A; border: none; border-radius: 18px; padding: 15px; cursor: pointer; box-shadow: 0 4px 0 #4F9A6B;">2 Players &middot; same keyboard</button>
+        <div style="display: flex; gap: 12px;">
+          <button onClick="{{ openHost }}" style="flex: 1; font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 800; color: #FFFFFF; background: #B197FC; border: none; border-radius: 18px; padding: 15px; cursor: pointer; box-shadow: 0 4px 0 #8E72E0;">Host online</button>
+          <button onClick="{{ openJoin }}" style="flex: 1; font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 800; color: #FFFFFF; background: #E5A05C; border: none; border-radius: 18px; padding: 15px; cursor: pointer; box-shadow: 0 4px 0 #C9803A;">Join online</button>
+        </div>
+      </div>
+      <div style="font-size: 12px; font-weight: 600; color: #C9B8A6; margin-top: 18px; line-height: 1.6;">Online play is serverless (peer-to-peer WebRTC) &mdash; swap the invite &amp; reply codes to connect.</div>
+    </div>
+  </sc-if>
 
-    <!-- Left panel: score + next -->
-    <div style="display: flex; flex-direction: column; gap: 14px; width: 150px;">
-      <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 14px 16px; text-align: center;">
-        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Score</div>
-        <div style="font-size: 34px; font-weight: 800; line-height: 1.1; color: #5B4636;">{{ score }}</div>
+  <!-- ============ HOST ============ -->
+  <sc-if value="{{ showHost }}" hint-placeholder-val="{{ false }}">
+    <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 26px; padding: 26px 28px; max-width: 480px; width: 100%; animation: popIn 0.3s ease-out;">
+      <div style="font-size: 22px; font-weight: 800; color: #B197FC; text-align: center; margin-bottom: 14px;">Host online</div>
+      <div style="font-size: 13px; font-weight: 700; color: #B99C82; margin-bottom: 6px;">1 &mdash; Send this invite code to your friend</div>
+      <textarea ref="{{ refHostCode }}" readOnly placeholder="Creating code&hellip;" style="width: 100%; height: 70px; resize: none; font-family: ui-monospace, Menlo, monospace; font-size: 10px; line-height: 1.35; padding: 9px; border: 2px solid #F2DDC4; border-radius: 12px; background: #FFFDF8; color: #5B4636; outline: none;"></textarea>
+      <button onClick="{{ copyHost }}" style="margin: 8px 0 14px; font-family: 'Baloo 2', sans-serif; font-size: 13px; font-weight: 800; color: #8A6F58; background: #FFF3E0; border: 2px solid #F2DDC4; border-radius: 12px; padding: 9px 16px; cursor: pointer;">Copy invite code</button>
+      <div style="font-size: 13px; font-weight: 700; color: #B99C82; margin-bottom: 6px;">2 &mdash; Paste their reply code</div>
+      <textarea ref="{{ refHostAnswer }}" placeholder="Paste reply code&hellip;" style="width: 100%; height: 70px; resize: none; font-family: ui-monospace, Menlo, monospace; font-size: 10px; line-height: 1.35; padding: 9px; border: 2px solid #F2DDC4; border-radius: 12px; background: #FFFDF8; color: #5B4636; outline: none;"></textarea>
+      <button onClick="{{ hostConnect }}" style="margin-top: 10px; width: 100%; font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 800; color: #FFFFFF; background: #B197FC; border: none; border-radius: 16px; padding: 13px; cursor: pointer; box-shadow: 0 4px 0 #8E72E0;">Connect</button>
+      <div style="font-size: 13px; font-weight: 700; min-height: 18px; text-align: center; margin-top: 10px; color: {{ netStatusColor }};">{{ netStatus }}</div>
+      <button onClick="{{ backToMenu }}" style="width: 100%; font-family: 'Baloo 2', sans-serif; font-size: 13px; font-weight: 700; color: #B99C82; background: transparent; border: none; padding: 6px; cursor: pointer;">Back to menu</button>
+    </div>
+  </sc-if>
+
+  <!-- ============ JOIN ============ -->
+  <sc-if value="{{ showJoin }}" hint-placeholder-val="{{ false }}">
+    <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 26px; padding: 26px 28px; max-width: 480px; width: 100%; animation: popIn 0.3s ease-out;">
+      <div style="font-size: 22px; font-weight: 800; color: #E5A05C; text-align: center; margin-bottom: 14px;">Join online</div>
+      <div style="font-size: 13px; font-weight: 700; color: #B99C82; margin-bottom: 6px;">1 &mdash; Paste the host's invite code</div>
+      <textarea ref="{{ refJoinCode }}" placeholder="Paste invite code&hellip;" style="width: 100%; height: 70px; resize: none; font-family: ui-monospace, Menlo, monospace; font-size: 10px; line-height: 1.35; padding: 9px; border: 2px solid #F2DDC4; border-radius: 12px; background: #FFFDF8; color: #5B4636; outline: none;"></textarea>
+      <button onClick="{{ joinReply }}" style="margin: 8px 0 14px; width: 100%; font-family: 'Baloo 2', sans-serif; font-size: 16px; font-weight: 800; color: #FFFFFF; background: #E5A05C; border: none; border-radius: 16px; padding: 12px; cursor: pointer; box-shadow: 0 4px 0 #C9803A;">Create reply code</button>
+      <div style="font-size: 13px; font-weight: 700; color: #B99C82; margin-bottom: 6px;">2 &mdash; Send this reply code back to the host</div>
+      <textarea ref="{{ refJoinAnswer }}" readOnly placeholder="Reply code appears here&hellip;" style="width: 100%; height: 70px; resize: none; font-family: ui-monospace, Menlo, monospace; font-size: 10px; line-height: 1.35; padding: 9px; border: 2px solid #F2DDC4; border-radius: 12px; background: #FFFDF8; color: #5B4636; outline: none;"></textarea>
+      <button onClick="{{ copyJoin }}" style="margin-top: 8px; font-family: 'Baloo 2', sans-serif; font-size: 13px; font-weight: 800; color: #8A6F58; background: #FFF3E0; border: 2px solid #F2DDC4; border-radius: 12px; padding: 9px 16px; cursor: pointer;">Copy reply code</button>
+      <div style="font-size: 13px; font-weight: 700; min-height: 18px; text-align: center; margin-top: 10px; color: {{ netStatusColor }};">{{ netStatus }}</div>
+      <button onClick="{{ backToMenu }}" style="width: 100%; font-family: 'Baloo 2', sans-serif; font-size: 13px; font-weight: 700; color: #B99C82; background: transparent; border: none; padding: 6px; cursor: pointer;">Back to menu</button>
+    </div>
+  </sc-if>
+
+  <!-- ============ SINGLE PLAYER ============ -->
+  <sc-if value="{{ showSingle }}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; justify-content: center;">
+
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 150px;">
+        <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 14px 16px; text-align: center;">
+          <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Score</div>
+          <div style="font-size: 34px; font-weight: 800; line-height: 1.1; color: #5B4636;">{{ p1Score }}</div>
+        </div>
+        <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
+          <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Best</div>
+          <div style="font-size: 24px; font-weight: 800; color: #E5A05C;">{{ best }}</div>
+        </div>
+        <div style="background: {{ p1ComboBg }}; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
+          <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Combo</div>
+          <div style="font-size: 24px; font-weight: 800; color: #E5735C;">&times;{{ p1Combo }}</div>
+          <div style="font-size: 11px; font-weight: 700; color: #B99C82;">chain 3 &rarr; bomb!</div>
+        </div>
+        <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
+          <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82; margin-bottom: 8px;">Next</div>
+          <div style="height: 64px; display: flex; align-items: center; justify-content: center;">
+            <div style="width: {{ p1NextSizePx }}; height: {{ p1NextSizePx }}; border-radius: 50%; background: {{ p1NextColor }}; border: 3px solid rgba(0,0,0,0.08); animation: floatBob 2.2s ease-in-out infinite; position: relative;">
+              <div style="position: absolute; left: 28%; top: 38%; width: 5px; height: 7px; border-radius: 50%; background: #4A3728;"></div>
+              <div style="position: absolute; right: 28%; top: 38%; width: 5px; height: 7px; border-radius: 50%; background: #4A3728;"></div>
+              <div style="position: absolute; left: 50%; top: 58%; width: 10px; height: 5px; border-radius: 0 0 10px 10px; background: #4A3728; transform: translateX(-50%);"></div>
+            </div>
+          </div>
+        </div>
+        <button onClick="{{ togglePause }}" style="font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 20px; padding: 12px 16px; cursor: pointer; box-shadow: 0 4px 0 #C9553F; text-align: center;">{{ pauseLabel }}</button>
       </div>
-      <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
-        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Best</div>
-        <div style="font-size: 24px; font-weight: 800; color: #E5A05C;">{{ best }}</div>
+
+      <div style="position: relative;">
+        <div style="background: #FFF3E0; border: 4px solid #E8C9A0; border-radius: 24px; padding: 8px; box-shadow: 0 6px 0 rgba(232,201,160,0.5);">
+          <canvas ref="{{ refSingle }}" width="480" height="640" style="display: block; width: min(480px, calc(100vw - 48px)); height: auto; border-radius: 16px; touch-action: none; cursor: crosshair;"></canvas>
+        </div>
+
+        <sc-if value="{{ showResult }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 8px; border-radius: 20px; background: rgba(91,70,54,0.55); display: flex; align-items: center; justify-content: center;">
+            <div style="background: #FFFDF8; border-radius: 24px; padding: 28px 36px; text-align: center; animation: popIn 0.35s ease-out; border: 4px solid #F2DDC4;">
+              <div style="font-size: 30px; font-weight: 800; color: #E5735C; margin-bottom: 4px;">Game Over!</div>
+              <div style="font-size: 16px; font-weight: 600; color: #B99C82; margin-bottom: 2px;">final score</div>
+              <div style="font-size: 40px; font-weight: 800; color: #5B4636; margin-bottom: 16px;">{{ p1Score }}</div>
+              <button onClick="{{ rematch }}" style="font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 999px; padding: 12px 32px; cursor: pointer; box-shadow: 0 4px 0 #C9553F;">Play again</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 8px; border-radius: 20px; background: rgba(91,70,54,0.55); display: flex; align-items: center; justify-content: center;">
+            <div style="background: #FFFDF8; border-radius: 24px; padding: 28px 36px; text-align: center; animation: popIn 0.35s ease-out; border: 4px solid #F2DDC4;">
+              <div style="font-size: 30px; font-weight: 800; color: #E5735C; margin-bottom: 8px;">Paused</div>
+              <div style="font-size: 15px; font-weight: 600; color: #B99C82; margin-bottom: 18px;">Take a breather &middot; press P or Esc</div>
+              <button onClick="{{ togglePause }}" style="font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 999px; padding: 12px 32px; cursor: pointer; box-shadow: 0 4px 0 #C9553F;">Resume</button>
+            </div>
+          </div>
+        </sc-if>
       </div>
-      <div style="background: {{ comboBg }}; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
-        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82;">Combo</div>
-        <div style="font-size: 24px; font-weight: 800; color: #E5735C;">&times;{{ combo }}</div>
-        <div style="font-size: 11px; font-weight: 700; color: #B99C82;">chain 3 &rarr; bomb!</div>
-      </div>
-      <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 12px 16px; text-align: center;">
-        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82; margin-bottom: 8px;">Next</div>
-        <div style="height: 64px; display: flex; align-items: center; justify-content: center;">
-          <div style="width: {{ nextSizePx }}; height: {{ nextSizePx }}; border-radius: 50%; background: {{ nextColor }}; border: 3px solid rgba(0,0,0,0.08); animation: floatBob 2.2s ease-in-out infinite; position: relative;">
-            <div style="position: absolute; left: 28%; top: 38%; width: 5px; height: 7px; border-radius: 50%; background: #4A3728;"></div>
-            <div style="position: absolute; right: 28%; top: 38%; width: 5px; height: 7px; border-radius: 50%; background: #4A3728;"></div>
-            <div style="position: absolute; left: 50%; top: 58%; width: 10px; height: 5px; border-radius: 0 0 10px 10px; background: #4A3728; transform: translateX(-50%);"></div>
+
+      <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 14px 18px; width: 130px;">
+        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82; text-align: center; margin-bottom: 10px;">Evolution</div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+          <div style="width: 14px; height: 14px; border-radius: 50%; background: #F27E93; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 18px; height: 18px; border-radius: 50%; background: #EF5D74; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 22px; height: 22px; border-radius: 50%; background: #B197FC; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 26px; height: 26px; border-radius: 50%; background: #FFC15C; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 31px; height: 31px; border-radius: 50%; background: #FF9F43; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #F2695C; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 42px; height: 42px; border-radius: 50%; background: #C9E265; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 48px; height: 48px; border-radius: 50%; background: #FFBBA6; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 55px; height: 55px; border-radius: 50%; background: #FFD966; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 62px; height: 62px; border-radius: 50%; background: #A8E6A1; border: 2px solid rgba(0,0,0,0.08);"></div>
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: #63C168; border: 2px solid rgba(0,0,0,0.08); position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 8px, rgba(30,90,40,0.25) 8px 13px);"></div>
           </div>
         </div>
       </div>
-      <button onClick="{{ togglePause }}" style="font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 20px; padding: 12px 16px; cursor: pointer; box-shadow: 0 4px 0 #C9553F; text-align: center;">{{ pauseLabel }}</button>
     </div>
+    <div style="margin-top: 14px; font-size: 14px; font-weight: 600; color: #B99C82;">Move to aim &middot; click or tap to drop &middot; stay under the dashed line!</div>
+  </sc-if>
 
-    <!-- Board -->
+  <!-- ============ TWO-BOARD (local / p2p) ============ -->
+  <sc-if value="{{ showMulti }}" hint-placeholder-val="{{ false }}">
     <div style="position: relative;">
-      <div style="background: #FFF3E0; border: 4px solid #E8C9A0; border-radius: 24px; padding: 8px; box-shadow: 0 6px 0 rgba(232,201,160,0.5);">
-        <canvas ref="{{ canvasRef }}" width="480" height="640" style="display: block; width: min(480px, calc(100vw - 48px)); height: auto; border-radius: 16px; touch-action: none; cursor: crosshair;"></canvas>
+      <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center;">
+
+        <!-- Player 1 board -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 11px; height: 11px; border-radius: 50%; background: #E5735C;"></div>
+            <div style="font-size: 15px; font-weight: 800; color: {{ p1TitleColor }};">{{ p1Name }}</div>
+            <div style="font-size: 20px; font-weight: 800; color: #5B4636;">{{ p1Score }}</div>
+            <div style="font-size: 13px; font-weight: 700; color: #E5735C;">&times;{{ p1Combo }}</div>
+          </div>
+          <div style="background: #FFF3E0; border: 4px solid #E8C9A0; border-radius: 20px; padding: 6px; box-shadow: 0 5px 0 rgba(232,201,160,0.5);">
+            <canvas ref="{{ refMulti0 }}" width="480" height="640" style="display: block; width: min(320px, calc(50vw - 30px)); height: auto; border-radius: 14px; touch-action: none; cursor: crosshair;"></canvas>
+          </div>
+          <div style="font-size: 12px; font-weight: 700; color: #B99C82;">{{ p1Controls }}</div>
+        </div>
+
+        <!-- Player 2 board -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 11px; height: 11px; border-radius: 50%; background: #B197FC;"></div>
+            <div style="font-size: 15px; font-weight: 800; color: {{ p2TitleColor }};">{{ p2Name }}</div>
+            <div style="font-size: 20px; font-weight: 800; color: #5B4636;">{{ p2Score }}</div>
+            <div style="font-size: 13px; font-weight: 700; color: #B197FC;">&times;{{ p2Combo }}</div>
+          </div>
+          <div style="background: #FFF3E0; border: 4px solid #E8C9A0; border-radius: 20px; padding: 6px; box-shadow: 0 5px 0 rgba(232,201,160,0.5);">
+            <canvas ref="{{ refMulti1 }}" width="480" height="640" style="display: block; width: min(320px, calc(50vw - 30px)); height: auto; border-radius: 14px; touch-action: none; cursor: crosshair;"></canvas>
+          </div>
+          <div style="font-size: 12px; font-weight: 700; color: #B99C82;">{{ p2Controls }}</div>
+        </div>
+
       </div>
 
-      <sc-if value="{{ gameOver }}" hint-placeholder-val="{{ false }}">
-        <div style="position: absolute; inset: 8px; border-radius: 20px; background: rgba(91,70,54,0.55); display: flex; align-items: center; justify-content: center;">
-          <div style="background: #FFFDF8; border-radius: 24px; padding: 28px 36px; text-align: center; animation: popIn 0.35s ease-out; border: 4px solid #F2DDC4;">
-            <div style="font-size: 30px; font-weight: 800; color: #E5735C; margin-bottom: 4px;">Game Over!</div>
-            <div style="font-size: 16px; font-weight: 600; color: #B99C82; margin-bottom: 2px;">final score</div>
-            <div style="font-size: 40px; font-weight: 800; color: #5B4636; margin-bottom: 16px;">{{ score }}</div>
-            <button onClick="{{ restart }}" style="font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 999px; padding: 12px 32px; cursor: pointer; box-shadow: 0 4px 0 #C9553F;">Play again</button>
+      <sc-if value="{{ showResult }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; inset: 0; border-radius: 20px; background: rgba(91,70,54,0.55); display: flex; align-items: center; justify-content: center;">
+          <div style="background: #FFFDF8; border-radius: 24px; padding: 28px 40px; text-align: center; animation: popIn 0.35s ease-out; border: 4px solid #F2DDC4;">
+            <div style="font-size: 32px; font-weight: 800; color: #E5735C; margin-bottom: 6px;">{{ resultTitle }}</div>
+            <div style="font-size: 16px; font-weight: 700; color: #5B4636; margin-bottom: 18px;">{{ resultSub }}</div>
+            <sc-if value="{{ canRematch }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ rematch }}" style="font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 999px; padding: 12px 32px; cursor: pointer; box-shadow: 0 4px 0 #C9553F;">Rematch</button>
+            </sc-if>
+            <sc-if value="{{ waitRematch }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 14px; font-weight: 700; color: #B99C82; animation: blink 1.2s ease-in-out infinite;">Waiting for host&hellip;</div>
+            </sc-if>
           </div>
         </div>
       </sc-if>
 
       <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
-        <div style="position: absolute; inset: 8px; border-radius: 20px; background: rgba(91,70,54,0.55); display: flex; align-items: center; justify-content: center;">
+        <div style="position: absolute; inset: 0; border-radius: 20px; background: rgba(91,70,54,0.55); display: flex; align-items: center; justify-content: center;">
           <div style="background: #FFFDF8; border-radius: 24px; padding: 28px 36px; text-align: center; animation: popIn 0.35s ease-out; border: 4px solid #F2DDC4;">
             <div style="font-size: 30px; font-weight: 800; color: #E5735C; margin-bottom: 8px;">Paused</div>
-            <div style="font-size: 15px; font-weight: 600; color: #B99C82; margin-bottom: 18px;">Take a breather &middot; press P or Esc</div>
+            <div style="font-size: 15px; font-weight: 600; color: #B99C82; margin-bottom: 18px;">press P or Esc to resume</div>
             <button onClick="{{ togglePause }}" style="font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 800; color: #FFFFFF; background: #E5735C; border: none; border-radius: 999px; padding: 12px 32px; cursor: pointer; box-shadow: 0 4px 0 #C9553F;">Resume</button>
           </div>
         </div>
       </sc-if>
     </div>
+    <div style="margin-top: 14px; font-size: 14px; font-weight: 600; color: #B99C82; text-align: center;">{{ multiHint }}</div>
+  </sc-if>
 
-    <!-- Evolution chart -->
-    <div style="background: #FFFFFF; border: 3px solid #F2DDC4; border-radius: 20px; padding: 14px 18px; width: 130px;">
-      <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B99C82; text-align: center; margin-bottom: 10px;">Evolution</div>
-      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
-        <div style="width: 14px; height: 14px; border-radius: 50%; background: #F27E93; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 18px; height: 18px; border-radius: 50%; background: #EF5D74; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 22px; height: 22px; border-radius: 50%; background: #B197FC; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 26px; height: 26px; border-radius: 50%; background: #FFC15C; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 31px; height: 31px; border-radius: 50%; background: #FF9F43; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 36px; height: 36px; border-radius: 50%; background: #F2695C; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 42px; height: 42px; border-radius: 50%; background: #C9E265; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 48px; height: 48px; border-radius: 50%; background: #FFBBA6; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 55px; height: 55px; border-radius: 50%; background: #FFD966; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 62px; height: 62px; border-radius: 50%; background: #A8E6A1; border: 2px solid rgba(0,0,0,0.08);"></div>
-        <div style="width: 70px; height: 70px; border-radius: 50%; background: #63C168; border: 2px solid rgba(0,0,0,0.08); position: relative; overflow: hidden;">
-          <div style="position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 8px, rgba(30,90,40,0.25) 8px 13px);"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <div style="margin-top: 14px; font-size: 14px; font-weight: 600; color: #B99C82;">Move to aim &middot; click or tap to drop &middot; stay under the dashed line!</div>
-
-  <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 12px; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 14px;">
+  <div style="margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 12px; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 14px;">
     <a href="https://github.freaxnx01.ch/games/" style="text-decoration: none;">More Games&hellip;</a>
     <span style="color: #B99C82;">&middot;</span>
     <a href="https://github.com/freaxnx01/game-fruit-frenzy" target="_blank" rel="noopener" style="text-decoration: none;">Source</a>
@@ -131,108 +244,142 @@ const TIERS = [
   { r: 120, color: '#63C168', dark: '#469A4C', score: 100, name: 'Watermelon' }
 ];
 const W = 480, H = 640, LINE_Y = 110, DROP_Y = 62, BOMB_R = 26;
+const AIM_SPEED = 520; // px/sec for keyboard aiming
 
-class Component extends DCLogic {
-  state = {
-    score: 0,
-    best: Number(localStorage.getItem('fruitMergeBest') || 0),
-    nextTier: 0,
-    gameOver: false,
-    combo: 1,
-    paused: false
-  };
+/* ---------- connect-code codec (ported from Stack Duel / Tank Toys) ---------- */
+function _scB64(u8) {
+  let s = '';
+  for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function _scUnb64(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s), u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+async function _scEncodeCode(obj) {
+  const json = JSON.stringify(obj);
+  try {
+    const cs = new CompressionStream('deflate-raw');
+    const buf = await new Response(new Blob([json]).stream().pipeThrough(cs)).arrayBuffer();
+    return 'S1.' + _scB64(new Uint8Array(buf));
+  } catch (e) {
+    return 'S0.' + _scB64(new TextEncoder().encode(json));
+  }
+}
+async function _scDecodeCode(str) {
+  str = (str || '').trim().replace(/\s+/g, '');
+  const i = str.indexOf('.');
+  if (i < 0) throw new Error('bad code');
+  const tag = str.slice(0, i), bytes = _scUnb64(str.slice(i + 1));
+  let text;
+  if (tag === 'S1') {
+    const ds = new DecompressionStream('deflate-raw');
+    const buf = await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer();
+    text = new TextDecoder().decode(buf);
+  } else {
+    text = new TextDecoder().decode(bytes);
+  }
+  return JSON.parse(text);
+}
 
-  canvasRef = (el) => { this.canvas = el; };
+/* ---------- WebRTC manual-signaling link (ported from Stack Duel) ---------- */
+class NetLink {
+  constructor(onMsg, onState) {
+    this.onMsg = onMsg; this.onState = onState; this.ch = null;
+    this.pc = new RTCPeerConnection({
+      iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }]
+    });
+    this.pc.onconnectionstatechange = () => this.onState(this.pc.connectionState);
+  }
+  _wire(ch) {
+    this.ch = ch;
+    ch.onopen = () => this.onState('open');
+    ch.onclose = () => this.onState('closed');
+    ch.onmessage = (e) => { try { this.onMsg(JSON.parse(e.data)); } catch (_) {} };
+  }
+  _gather() {
+    return new Promise((res) => {
+      if (this.pc.iceGatheringState === 'complete') return res();
+      const t = setTimeout(res, 4000);
+      this.pc.addEventListener('icegatheringstatechange', () => {
+        if (this.pc.iceGatheringState === 'complete') { clearTimeout(t); res(); }
+      });
+    });
+  }
+  async host() {
+    this._wire(this.pc.createDataChannel('game'));
+    await this.pc.setLocalDescription(await this.pc.createOffer());
+    await this._gather();
+    return _scEncodeCode(this.pc.localDescription);
+  }
+  async acceptAnswer(code) {
+    await this.pc.setRemoteDescription(await _scDecodeCode(code));
+  }
+  async join(code) {
+    this.pc.ondatachannel = (e) => this._wire(e.channel);
+    await this.pc.setRemoteDescription(await _scDecodeCode(code));
+    await this.pc.setLocalDescription(await this.pc.createAnswer());
+    await this._gather();
+    return _scEncodeCode(this.pc.localDescription);
+  }
+  send(o) { if (this.ch && this.ch.readyState === 'open') this.ch.send(JSON.stringify(o)); }
+  close() { try { this.pc.close(); } catch (_) {} }
+}
 
-  componentDidMount() {
+/* ---------- one fruit-merge board (owns its own sim + rendering) ---------- */
+class Board {
+  constructor(idx, game) {
+    this.idx = idx;
+    this.game = game;
+    this.canvas = null;
+    this.remote = false;      // if true: not simulated locally, just rendered from snapshots
+    this.best = Number(localStorage.getItem('fruitMergeBest') || 0);
+    this.reset();
+  }
+
+  reset() {
     this.fruits = [];
     this.particles = [];
+    this.floaters = [];
+    this.score = 0;
+    this.chain = 0;
+    this.combo = 1;
     this.canDrop = true;
     this.aimX = W / 2;
+    this.aimDir = 0;
     this.currentTier = this.randTier();
-    this.setState({ nextTier: this.randTier() });
+    this.nextTier = this.randTier();
     this.overTimer = 0;
-    this.lastT = performance.now();
-    this.audio = null;
-    this.chain = 0;
     this.lastMergeAt = 0;
-    this.floaters = [];
     this.bombPending = false;
-
-    const c = this.canvas;
-    const getX = (e) => {
-      const rect = c.getBoundingClientRect();
-      const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-      return cx * (W / rect.width);
-    };
-    this.onMove = (e) => { this.aimX = getX(e); };
-    this.onDown = (e) => { e.preventDefault(); this.aimX = getX(e); this.drop(); };
-    c.addEventListener('pointermove', this.onMove);
-    c.addEventListener('pointerdown', this.onDown);
-
-    this.onKey = (e) => {
-      if (e.code === 'KeyP' || e.code === 'Escape') {
-        e.preventDefault();
-        this.togglePause();
-      }
-    };
-    window.addEventListener('keydown', this.onKey);
-
-    this.raf = requestAnimationFrame(this.loop);
+    this.gameOver = false;
   }
-
-  componentWillUnmount() {
-    cancelAnimationFrame(this.raf);
-    if (this.canvas) {
-      this.canvas.removeEventListener('pointermove', this.onMove);
-      this.canvas.removeEventListener('pointerdown', this.onDown);
-    }
-    window.removeEventListener('keydown', this.onKey);
-  }
-
-  togglePause = () => {
-    if (this.state.gameOver) return;
-    this.setState({ paused: !this.state.paused });
-  };
 
   randTier() { return Math.floor(Math.random() * 5); }
+  bounciness() { return this.game.props.bounciness ?? 0.45; }
 
-  bounciness() { return this.props.bounciness ?? 0.45; }
-
-  // ---- sound ----
-  beep(freq, dur, type, vol) {
-    if (!(this.props.soundEnabled ?? true)) return;
-    try {
-      if (!this.audio) this.audio = new (window.AudioContext || window.webkitAudioContext)();
-      const a = this.audio;
-      const o = a.createOscillator(), g = a.createGain();
-      o.type = type || 'sine'; o.frequency.value = freq;
-      g.gain.setValueAtTime(vol || 0.12, a.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
-      o.connect(g); g.connect(a.destination);
-      o.start(); o.stop(a.currentTime + dur);
-    } catch (e) {}
-  }
-  popSound(tier) {
-    this.beep(320 + tier * 45, 0.12, 'sine', 0.1);
-  }
-  mergeSound(tier) {
-    this.beep(380 + tier * 40, 0.14, 'triangle', 0.14);
-    setTimeout(() => this.beep(560 + tier * 50, 0.18, 'triangle', 0.12), 70);
+  addScore(pts) {
+    this.score += pts;
+    if (this.game.mode === 'single' && this.score > this.best) {
+      this.best = this.score;
+      localStorage.setItem('fruitMergeBest', String(this.best));
+    }
   }
 
-  // ---- game actions ----
   drop() {
-    if (!this.canDrop || this.state.gameOver || this.state.paused) return;
+    if (!this.canDrop || this.gameOver) return;
     if (this.currentTier === 'bomb') {
       const x = Math.max(BOMB_R + 4, Math.min(W - BOMB_R - 4, this.aimX));
       this.fruits.push({ x, y: DROP_Y, vx: 0, vy: 60, tier: 0, bomb: true, born: performance.now(), squish: 0 });
-      this.beep(180, 0.2, 'square', 0.08);
+      this.game.beep(180, 0.2, 'square', 0.08);
     } else {
       const t = TIERS[this.currentTier];
       const x = Math.max(t.r + 4, Math.min(W - t.r - 4, this.aimX));
       this.fruits.push({ x, y: DROP_Y, vx: 0, vy: 60, tier: this.currentTier, born: performance.now(), squish: 0 });
-      this.popSound(this.currentTier);
+      this.game.beep(320 + this.currentTier * 45, 0.12, 'sine', 0.1);
     }
     this.canDrop = false;
     if (this.bombPending) {
@@ -240,31 +387,12 @@ class Component extends DCLogic {
       this.currentTier = 'bomb';
       setTimeout(() => { this.canDrop = true; }, 480);
     } else {
-      this.currentTier = this.state.nextTier;
+      this.currentTier = this.nextTier;
       setTimeout(() => {
         this.canDrop = true;
-        this.setState({ nextTier: this.randTier() });
+        this.nextTier = this.randTier();
       }, 480);
     }
-  }
-
-  restart = () => {
-    this.fruits = [];
-    this.particles = [];
-    this.floaters = [];
-    this.overTimer = 0;
-    this.chain = 0;
-    this.bombPending = false;
-    this.canDrop = true;
-    this.currentTier = this.randTier();
-    this.setState({ score: 0, gameOver: false, nextTier: this.randTier(), combo: 1, paused: false });
-  };
-
-  addScore(pts) {
-    const score = this.state.score + pts;
-    let best = this.state.best;
-    if (score > best) { best = score; localStorage.setItem('fruitMergeBest', String(best)); }
-    this.setState({ score, best });
   }
 
   spawnParticles(x, y, color, r) {
@@ -274,7 +402,6 @@ class Component extends DCLogic {
     }
   }
 
-  // ---- physics ----
   step(dt) {
     const fruits = this.fruits;
     const rest = this.bounciness();
@@ -297,7 +424,6 @@ class Component extends DCLogic {
         if (f.squish > 0) f.squish = Math.max(0, f.squish - dt * 3);
       }
 
-      // pairwise
       for (let i = 0; i < fruits.length; i++) {
         for (let j = i + 1; j < fruits.length; j++) {
           const A = fruits[i], B = fruits[j];
@@ -319,7 +445,6 @@ class Component extends DCLogic {
             continue;
           }
           if (A.tier === B.tier && A.tier === TIERS.length - 1) {
-            // two watermelons vanish!
             A.dead = B.dead = true;
             this.spawnParticles((A.x + B.x) / 2, (A.y + B.y) / 2, TIERS[A.tier].color, 60);
             this.mergeSound(10);
@@ -345,17 +470,14 @@ class Component extends DCLogic {
       this.fruits = this.fruits.filter(f => !f.dead);
     }
 
-    // chain expiry
     if (this.chain > 0 && performance.now() - this.lastMergeAt > 1600) {
       this.chain = 0;
-      if (this.state.combo !== 1) this.setState({ combo: 1 });
+      this.combo = 1;
     }
 
-    // floaters
     for (const fl of this.floaters) { fl.y -= 50 * dt; fl.life -= dt * 0.9; }
     this.floaters = this.floaters.filter(fl => fl.life > 0);
 
-    // particles
     for (const p of this.particles) {
       p.vy += 900 * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
@@ -363,7 +485,6 @@ class Component extends DCLogic {
     }
     this.particles = this.particles.filter(p => p.life > 0);
 
-    // game over check
     const now = performance.now();
     let danger = false;
     for (const f of this.fruits) {
@@ -372,11 +493,17 @@ class Component extends DCLogic {
     }
     if (danger) {
       this.overTimer += dt;
-      if (this.overTimer > 1.0 && !this.state.gameOver) {
-        this.setState({ gameOver: true });
-        this.beep(220, 0.4, 'sawtooth', 0.08);
+      if (this.overTimer > 1.0 && !this.gameOver) {
+        this.gameOver = true;
+        this.game.beep(220, 0.4, 'sawtooth', 0.08);
+        this.game.onBoardOver(this);
       }
     } else this.overTimer = 0;
+  }
+
+  mergeSound(tier) {
+    this.game.beep(380 + tier * 40, 0.14, 'triangle', 0.14);
+    setTimeout(() => this.game.beep(560 + tier * 50, 0.18, 'triangle', 0.12), 70);
   }
 
   merge(A, B) {
@@ -390,19 +517,18 @@ class Component extends DCLogic {
     this.spawnParticles(x, y, TIERS[nt].color, TIERS[nt].r);
     this.mergeSound(nt);
 
-    // chain combo
     const now = performance.now();
     this.chain = (now - this.lastMergeAt < 1600) ? this.chain + 1 : 1;
     this.lastMergeAt = now;
     const pts = TIERS[nt].score * this.chain;
     this.addScore(pts);
-    if (this.state.combo !== this.chain) this.setState({ combo: this.chain });
-    if (this.chain >= 2) this.floaters.push({ x, y: y - TIERS[nt].r - 10, text: '\u00d7' + this.chain + '  +' + pts, life: 1, color: '#E5735C', size: 22 + this.chain * 3 });
+    this.combo = this.chain;
+    if (this.chain >= 2) this.floaters.push({ x, y: y - TIERS[nt].r - 10, text: '×' + this.chain + '  +' + pts, life: 1, color: '#E5735C', size: 22 + this.chain * 3 });
     if (this.chain >= 3 && !this.bombPending && this.currentTier !== 'bomb') {
       this.bombPending = true;
       this.floaters.push({ x: W / 2, y: 200, text: 'FRENZY BOMB READY!', life: 1.6, color: '#B197FC', size: 30 });
-      this.beep(700, 0.25, 'triangle', 0.14);
-      setTimeout(() => this.beep(940, 0.3, 'triangle', 0.12), 120);
+      this.game.beep(700, 0.25, 'triangle', 0.14);
+      setTimeout(() => this.game.beep(940, 0.3, 'triangle', 0.12), 120);
     }
   }
 
@@ -410,16 +536,15 @@ class Component extends DCLogic {
     if (b.dead) return;
     b.dead = true;
     const RADIUS = 135;
-    let pts = 0, n = 0;
+    let pts = 0;
     for (const f of this.fruits) {
       if (f === b || f.dead) continue;
       if (Math.hypot(f.x - b.x, f.y - b.y) < RADIUS + TIERS[f.tier].r * 0.5) {
-        f.dead = true; n++;
+        f.dead = true;
         pts += 5 + TIERS[f.tier].score;
         this.spawnParticles(f.x, f.y, TIERS[f.tier].color, TIERS[f.tier].r);
       }
     }
-    // shockwave particles
     for (let i = 0; i < 26; i++) {
       const a = (i / 26) * Math.PI * 2;
       this.particles.push({ x: b.x, y: b.y, vx: Math.cos(a) * 320, vy: Math.sin(a) * 320, life: 0.9, size: 5, color: i % 2 ? '#FFD966' : '#B197FC' });
@@ -428,8 +553,40 @@ class Component extends DCLogic {
       this.addScore(pts);
       this.floaters.push({ x: b.x, y: b.y - 40, text: 'BOOM! +' + pts, life: 1.4, color: '#E5735C', size: 30 });
     }
-    this.beep(90, 0.5, 'sawtooth', 0.18);
-    this.beep(240, 0.3, 'square', 0.1);
+    this.game.beep(90, 0.5, 'sawtooth', 0.18);
+    this.game.beep(240, 0.3, 'square', 0.1);
+  }
+
+  /* apply a snapshot received from the remote peer */
+  applySnapshot(m) {
+    this.fruits = (m.fr || []).map(a => ({ x: a[0], y: a[1], tier: a[2], bomb: a[3] === 1, squish: 0, born: 0 }));
+    this.currentTier = (m.ct === -1) ? 'bomb' : m.ct;
+    this.nextTier = m.nt;
+    this.aimX = m.ax;
+    this.canDrop = m.cd === 1;
+    this.score = m.s;
+    this.combo = m.cb;
+    this.bombPending = m.bp === 1;
+    this.overTimer = m.dz === 1 ? 1 : 0;
+    this.gameOver = m.go === 1;
+    this.particles = [];
+    this.floaters = [];
+  }
+
+  makeSnapshot() {
+    return {
+      t: 'b',
+      fr: this.fruits.map(f => [Math.round(f.x), Math.round(f.y), f.tier, f.bomb ? 1 : 0]),
+      ct: this.currentTier === 'bomb' ? -1 : this.currentTier,
+      nt: this.nextTier,
+      ax: Math.round(this.aimX),
+      cd: this.canDrop ? 1 : 0,
+      s: this.score,
+      cb: this.combo,
+      bp: this.bombPending ? 1 : 0,
+      dz: this.overTimer > 0 ? 1 : 0,
+      go: this.gameOver ? 1 : 0
+    };
   }
 
   drawBomb(ctx, x, y, r) {
@@ -440,13 +597,11 @@ class Component extends DCLogic {
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fillStyle = '#B197FC'; ctx.fill();
     ctx.lineWidth = 3; ctx.strokeStyle = '#8E72E0'; ctx.stroke();
-    // sparkle dots
     ctx.fillStyle = '#FFD966';
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2 + performance.now() / 400;
       ctx.beginPath(); ctx.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, 3.5, 0, Math.PI * 2); ctx.fill();
     }
-    // face: gleeful
     ctx.fillStyle = '#4A3728';
     ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.1, 3, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.1, 3, 0, Math.PI * 2); ctx.fill();
@@ -455,15 +610,6 @@ class Component extends DCLogic {
     ctx.restore();
   }
 
-  // ---- rendering ----
-  loop = (t) => {
-    const dt = Math.min(0.033, (t - this.lastT) / 1000);
-    this.lastT = t;
-    if (!this.state.gameOver && !this.state.paused) this.step(dt);
-    this.draw();
-    this.raf = requestAnimationFrame(this.loop);
-  };
-
   drawFruit(ctx, x, y, tier, squish) {
     const T = TIERS[tier];
     const r = T.r;
@@ -471,12 +617,10 @@ class Component extends DCLogic {
     ctx.translate(x, y);
     const sq = 1 + squish * 0.15;
     ctx.scale(sq, 2 - sq);
-    // body
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fillStyle = T.color; ctx.fill();
     ctx.lineWidth = Math.max(2, r * 0.06);
     ctx.strokeStyle = T.dark; ctx.stroke();
-    // watermelon stripes
     if (tier === TIERS.length - 1) {
       ctx.save();
       ctx.beginPath(); ctx.arc(0, 0, r - 2, 0, Math.PI * 2); ctx.clip();
@@ -490,24 +634,20 @@ class Component extends DCLogic {
       }
       ctx.restore();
     }
-    // highlight
     ctx.beginPath(); ctx.arc(-r * 0.35, -r * 0.4, r * 0.22, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
-    // leaf
     ctx.save();
     ctx.translate(r * 0.15, -r * 0.92);
     ctx.rotate(-0.5);
     ctx.beginPath(); ctx.ellipse(0, 0, r * 0.28, r * 0.13, 0, 0, Math.PI * 2);
     ctx.fillStyle = '#6DBB5E'; ctx.fill();
     ctx.restore();
-    // face
     const er = Math.max(2, r * 0.09);
     ctx.fillStyle = '#4A3728';
     ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.08, er, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.08, er, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(0, r * 0.14, r * 0.22, 0.15 * Math.PI, 0.85 * Math.PI);
     ctx.lineWidth = Math.max(2, r * 0.06); ctx.strokeStyle = '#4A3728'; ctx.lineCap = 'round'; ctx.stroke();
-    // blush
     ctx.fillStyle = 'rgba(255,120,120,0.35)';
     ctx.beginPath(); ctx.ellipse(-r * 0.52, r * 0.12, r * 0.13, r * 0.08, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(r * 0.52, r * 0.12, r * 0.13, r * 0.08, 0, 0, Math.PI * 2); ctx.fill();
@@ -519,11 +659,9 @@ class Component extends DCLogic {
     if (!c) return;
     const ctx = c.getContext('2d');
     ctx.clearRect(0, 0, W, H);
-    // background
     ctx.fillStyle = '#FFF9EF';
     ctx.fillRect(0, 0, W, H);
 
-    // danger line
     ctx.save();
     ctx.setLineDash([10, 8]);
     ctx.strokeStyle = this.overTimer > 0 ? '#E5735C' : '#E8C9A0';
@@ -531,8 +669,7 @@ class Component extends DCLogic {
     ctx.beginPath(); ctx.moveTo(0, LINE_Y); ctx.lineTo(W, LINE_Y); ctx.stroke();
     ctx.restore();
 
-    // aim guide + held fruit
-    if (this.canDrop && !this.state.gameOver) {
+    if (this.canDrop && !this.gameOver) {
       const isBomb = this.currentTier === 'bomb';
       const r = isBomb ? BOMB_R : TIERS[this.currentTier].r;
       const x = Math.max(r + 4, Math.min(W - r - 4, this.aimX));
@@ -546,13 +683,11 @@ class Component extends DCLogic {
       else this.drawFruit(ctx, x, DROP_Y, this.currentTier, 0);
     }
 
-    // fruits
     for (const f of this.fruits) {
       if (f.bomb) this.drawBomb(ctx, f.x, f.y, BOMB_R);
       else this.drawFruit(ctx, f.x, f.y, f.tier, f.squish);
     }
 
-    // particles
     for (const p of this.particles) {
       ctx.globalAlpha = Math.max(0, p.life);
       ctx.fillStyle = p.color;
@@ -560,7 +695,6 @@ class Component extends DCLogic {
     }
     ctx.globalAlpha = 1;
 
-    // floating combo text
     for (const fl of this.floaters) {
       ctx.globalAlpha = Math.max(0, Math.min(1, fl.life));
       ctx.font = '800 ' + fl.size + "px 'Baloo 2', sans-serif";
@@ -571,23 +705,430 @@ class Component extends DCLogic {
       ctx.fillText(fl.text, fl.x, fl.y);
     }
     ctx.globalAlpha = 1;
+
+    if (this.gameOver) {
+      ctx.fillStyle = 'rgba(91,70,54,0.32)';
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+}
+
+class Component extends DCLogic {
+  state = {
+    phase: 'menu',      // menu | host | join | playing
+    mode: 'single',     // single | local | p2p
+    muted: false,
+    paused: false,
+    showResult: false,
+    resultTitle: '',
+    resultSub: '',
+    netStatus: '',
+    netStatusKind: '',
+    hud: {}
+  };
+
+  netMode = false; myIdx = 0; net = null;
+
+  componentDidMount() {
+    this.props = this.props || {};
+    this.boards = [new Board(0, this), new Board(1, this)];
+    this.keys = new Set();
+    this.audio = null;
+    this.lastT = performance.now();
+    this.lastSend = 0;
+    this.lastHudStr = '';
+    this.hostCode = ''; this.joinAnswer = '';
+
+    this.onKeyDown = (e) => this.keyDown(e);
+    this.onKeyUp = (e) => this.keyUp(e);
+    this.onBlur = () => { this.keys.clear(); };
+    window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener('keyup', this.onKeyUp);
+    window.addEventListener('blur', this.onBlur);
+
+    this.raf = requestAnimationFrame(this.loop);
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf);
+    window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener('keyup', this.onKeyUp);
+    window.removeEventListener('blur', this.onBlur);
+    if (this.net) { try { this.net.close(); } catch (e) {} this.net = null; }
+    if (this.audio) { try { this.audio.close(); } catch (e) {} }
+  }
+
+  // ---- sound ----
+  beep(freq, dur, type, vol) {
+    if (this.state.muted) return;
+    if (!(this.props.soundEnabled ?? true)) return;
+    try {
+      if (!this.audio) this.audio = new (window.AudioContext || window.webkitAudioContext)();
+      const a = this.audio;
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol || 0.12, a.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+      o.connect(g); g.connect(a.destination);
+      o.start(); o.stop(a.currentTime + dur);
+    } catch (e) {}
+  }
+  ensureAudio() { try { if (!this.audio) this.audio = new (window.AudioContext || window.webkitAudioContext)(); if (this.audio.state === 'suspended') this.audio.resume(); } catch (e) {} }
+  toggleMute = () => { this.setState({ muted: !this.state.muted }); };
+
+  // ---- canvas refs ----
+  attachPointer(el, board) {
+    if (!el) return;
+    const getX = (e) => {
+      const rect = el.getBoundingClientRect();
+      const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      return cx * (W / rect.width);
+    };
+    el.__move = (e) => { board.aimX = getX(e); };
+    el.__down = (e) => { e.preventDefault(); this.ensureAudio(); board.aimX = getX(e); this.tryDrop(board); };
+    el.addEventListener('pointermove', el.__move);
+    el.addEventListener('pointerdown', el.__down);
+  }
+  refSingle = (el) => { this.boards[0].canvas = el; this.attachPointer(el, this.boards[0]); };
+  refMulti0 = (el) => {
+    this.boards[0].canvas = el;
+    if (this.state.mode === 'p2p' && this.myIdx === 0) this.attachPointer(el, this.boards[0]);
+  };
+  refMulti1 = (el) => {
+    this.boards[1].canvas = el;
+    if (this.state.mode === 'p2p' && this.myIdx === 1) this.attachPointer(el, this.boards[1]);
+  };
+
+  // ---- mode entry ----
+  startSingle = () => {
+    this.ensureAudio();
+    this.state.mode = 'single';
+    this.boards[0].remote = false; this.boards[1].remote = false;
+    this.boards[0].reset();
+    this.setState({ phase: 'playing', mode: 'single', paused: false, showResult: false });
+  };
+  startLocal = () => {
+    this.ensureAudio();
+    this.state.mode = 'local';
+    this.boards[0].remote = false; this.boards[1].remote = false;
+    this.boards[0].reset(); this.boards[1].reset();
+    this.setState({ phase: 'playing', mode: 'local', paused: false, showResult: false });
+  };
+
+  tryDrop(board) {
+    if (this.state.phase !== 'playing' || this.state.paused || this.state.showResult) return;
+    if (this.state.mode === 'p2p' && board !== this.boards[this.myIdx]) return;
+    if (board.remote) return;
+    board.drop();
+  }
+
+  togglePause = () => {
+    if (this.state.mode === 'p2p') return;
+    if (this.state.phase !== 'playing' || this.state.showResult) return;
+    this.setState({ paused: !this.state.paused });
+  };
+
+  // ---- results ----
+  onBoardOver(board) {
+    // handled centrally in checkResult()
+  }
+  checkResult() {
+    if (this.state.showResult) return;
+    const m = this.state.mode;
+    if (m === 'single') {
+      if (this.boards[0].gameOver) this.setResultSingle();
+    } else {
+      if (this.boards[0].gameOver && this.boards[1].gameOver) this.setResultMulti();
+    }
+  }
+  setResultSingle() {
+    this.setState({ showResult: true });
+  }
+  setResultMulti() {
+    const s0 = this.boards[0].score, s1 = this.boards[1].score;
+    let title, sub;
+    if (s0 === s1) { title = "It's a tie!"; }
+    else if (s0 > s1) { title = (this.p1Name()) + ' wins!'; }
+    else { title = (this.p2Name()) + ' wins!'; }
+    sub = this.p1Name() + ' ' + s0 + '  –  ' + s1 + ' ' + this.p2Name();
+    this.setState({ showResult: true, resultTitle: title, resultSub: sub });
+  }
+
+  rematch = () => {
+    if (this.state.mode === 'p2p') {
+      if (this.myIdx !== 0) return; // only host restarts
+      this.net.send({ t: 'restart' });
+    }
+    this.doRematch();
+  };
+  doRematch() {
+    this.boards[0].reset();
+    this.boards[1].reset();
+    this.setState({ showResult: false, paused: false, resultTitle: '', resultSub: '' });
+  }
+
+  p1Name() { return this.state.mode === 'p2p' ? (this.myIdx === 0 ? 'You' : 'Host') : 'Player 1'; }
+  p2Name() { return this.state.mode === 'p2p' ? (this.myIdx === 1 ? 'You' : 'Guest') : 'Player 2'; }
+
+  // ---- online (P2P) ----
+  _newLink() {
+    if (this.net) { try { this.net.close(); } catch (e) {} }
+    this.net = new NetLink((m) => this.onMsg(m), (s) => this.onNetState(s));
+  }
+  closeNet() { if (this.net) { try { this.net.close(); } catch (e) {} this.net = null; } this.netMode = false; }
+  _copy(text) {
+    if (!text) return;
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text); } catch (e) {}
+  }
+
+  openHost = () => {
+    this.ensureAudio();
+    this.myIdx = 0; this.hostCode = ''; this.joinAnswer = '';
+    this._newLink();
+    this.setState({ phase: 'host', mode: 'p2p', netStatus: 'Creating invite code…', netStatusKind: '' });
+    this.net.host().then(code => {
+      this.hostCode = code;
+      if (this.elHostCode) this.elHostCode.value = code;
+      this.setState({ netStatus: 'Waiting for the reply code…', netStatusKind: '' });
+    }).catch(e => this.setState({ netStatus: 'Could not create code: ' + e.message, netStatusKind: 'err' }));
+  };
+  openJoin = () => {
+    this.ensureAudio();
+    this.myIdx = 1; this.hostCode = ''; this.joinAnswer = '';
+    this._newLink();
+    this.setState({ phase: 'join', mode: 'p2p', netStatus: '', netStatusKind: '' });
+  };
+  copyHost = () => this._copy(this.elHostCode && this.elHostCode.value);
+  copyJoin = () => this._copy(this.elJoinAnswer && this.elJoinAnswer.value);
+  hostConnect = () => {
+    const v = this.elHostAnswer && this.elHostAnswer.value;
+    if (!v) { this.setState({ netStatus: 'Paste the reply code first.', netStatusKind: 'err' }); return; }
+    this.setState({ netStatus: 'Connecting…', netStatusKind: '' });
+    this.net.acceptAnswer(v).catch(e => this.setState({ netStatus: 'That code did not parse — paste the full reply code.', netStatusKind: 'err' }));
+  };
+  joinReply = () => {
+    const v = this.elJoinCode && this.elJoinCode.value;
+    if (!v) { this.setState({ netStatus: 'Paste the invite code first.', netStatusKind: 'err' }); return; }
+    this.setState({ netStatus: 'Creating reply code…', netStatusKind: '' });
+    this.net.join(v).then(code => {
+      this.joinAnswer = code;
+      if (this.elJoinAnswer) this.elJoinAnswer.value = code;
+      this.setState({ netStatus: 'Send the reply code to the host, then wait…', netStatusKind: '' });
+    }).catch(e => this.setState({ netStatus: 'That code did not parse — paste the full invite code.', netStatusKind: 'err' }));
+  };
+  backToMenu = () => {
+    this.closeNet();
+    this.setState({ phase: 'menu', mode: 'single', paused: false, showResult: false, netStatus: '', netStatusKind: '' });
+  };
+
+  refHostCode = (el) => { this.elHostCode = el; if (el && this.hostCode) el.value = this.hostCode; };
+  refHostAnswer = (el) => { this.elHostAnswer = el; };
+  refJoinCode = (el) => { this.elJoinCode = el; };
+  refJoinAnswer = (el) => { this.elJoinAnswer = el; if (el && this.joinAnswer) el.value = this.joinAnswer; };
+
+  onNetState(s) {
+    if (s === 'open') {
+      this.netMode = true;
+      this.boards[this.myIdx].remote = false;
+      this.boards[1 - this.myIdx].remote = true;
+      if (this.myIdx === 0) {
+        this.net.send({ t: 'start' });
+        this.startNetGame();
+      } else {
+        this.setState({ netStatus: 'Connected! Waiting for host to start…', netStatusKind: 'ok' });
+      }
+    } else if (s === 'failed' || s === 'disconnected' || s === 'closed') {
+      if (this.netMode) {
+        this.netMode = false;
+        this.closeNet();
+        this.setState({ phase: 'menu', mode: 'single', paused: false, showResult: false, netStatus: '', netStatusKind: '' });
+      }
+    }
+  }
+  startNetGame() {
+    this.boards[0].reset();
+    this.boards[1].reset();
+    this.setState({ phase: 'playing', mode: 'p2p', paused: false, showResult: false });
+  }
+  onMsg(m) {
+    if (!m) return;
+    if (m.t === 'start') {
+      this.startNetGame();
+    } else if (m.t === 'b') {
+      this.boards[1 - this.myIdx].applySnapshot(m);
+    } else if (m.t === 'restart') {
+      this.doRematch();
+    }
+  }
+
+  // ---- input ----
+  keyDown(e) {
+    const code = e.code;
+    if (code === 'KeyM') { this.toggleMute(); return; }
+    if (code === 'KeyP' || code === 'Escape') { this.togglePause(); return; }
+    if (this.state.phase !== 'playing') return;
+    this.keys.add(code);
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code)) e.preventDefault();
+    if (e.repeat) return;
+    const mode = this.state.mode;
+    if (mode === 'local') {
+      if (code === 'KeyW' || code === 'Space') { this.ensureAudio(); this.tryDrop(this.boards[0]); }
+      if (code === 'ArrowUp' || code === 'Enter' || code === 'NumpadEnter') { this.ensureAudio(); this.tryDrop(this.boards[1]); }
+    } else if (mode === 'p2p') {
+      if (code === 'Space' || code === 'ArrowUp' || code === 'Enter') { this.ensureAudio(); this.tryDrop(this.boards[this.myIdx]); }
+    } else if (mode === 'single') {
+      if (code === 'Space') { this.ensureAudio(); this.tryDrop(this.boards[0]); }
+    }
+  }
+  keyUp(e) { this.keys.delete(e.code); }
+
+  applyAim(dt) {
+    const move = (b, dir) => {
+      b.aimDir = dir;
+      if (dir) b.aimX = Math.max(10, Math.min(W - 10, b.aimX + dir * AIM_SPEED * dt));
+    };
+    const mode = this.state.mode;
+    const k = this.keys;
+    if (mode === 'local') {
+      move(this.boards[0], k.has('KeyA') ? -1 : k.has('KeyD') ? 1 : 0);
+      move(this.boards[1], k.has('ArrowLeft') ? -1 : k.has('ArrowRight') ? 1 : 0);
+    } else if (mode === 'p2p') {
+      const b = this.boards[this.myIdx];
+      const dir = (k.has('ArrowLeft') || k.has('KeyA')) ? -1 : (k.has('ArrowRight') || k.has('KeyD')) ? 1 : 0;
+      move(b, dir);
+    }
+  }
+
+  // ---- loop ----
+  loop = (t) => {
+    const dt = Math.min(0.033, (t - this.lastT) / 1000);
+    this.lastT = t;
+    const playing = this.state.phase === 'playing' && !this.state.paused && !this.state.showResult;
+
+    if (playing) {
+      this.applyAim(dt);
+      const mode = this.state.mode;
+      if (mode === 'single') {
+        if (!this.boards[0].gameOver) this.boards[0].step(dt);
+      } else if (mode === 'local') {
+        if (!this.boards[0].gameOver) this.boards[0].step(dt);
+        if (!this.boards[1].gameOver) this.boards[1].step(dt);
+      } else if (mode === 'p2p') {
+        const me = this.boards[this.myIdx];
+        if (!me.gameOver) me.step(dt);
+        if (this.net && t - this.lastSend > 45) {
+          this.lastSend = t;
+          this.net.send(me.makeSnapshot());
+        }
+      }
+      this.checkResult();
+    }
+
+    // draw whichever boards are on screen
+    if (this.state.phase === 'playing') {
+      if (this.state.mode === 'single') this.boards[0].draw();
+      else { this.boards[0].draw(); this.boards[1].draw(); }
+    }
+
+    this.syncHud();
+    this.raf = requestAnimationFrame(this.loop);
+  };
+
+  syncHud() {
+    const b0 = this.boards[0], b1 = this.boards[1];
+    const hud = {
+      s0: b0.score, c0: b0.combo, n0: b0.nextTier, over0: b0.gameOver,
+      s1: b1.score, c1: b1.combo, n1: b1.nextTier, over1: b1.gameOver,
+      best: b0.best
+    };
+    const str = JSON.stringify(hud);
+    if (str !== this.lastHudStr) {
+      this.lastHudStr = str;
+      this.setState({ hud });
+    }
   }
 
   renderVals() {
-    const nt = TIERS[this.state.nextTier] || TIERS[0];
+    const s = this.state;
+    const hud = s.hud || {};
+    const nt0 = TIERS[hud.n0 ?? 0] || TIERS[0];
+    const nt1 = TIERS[hud.n1 ?? 0] || TIERS[0];
+    const c0 = hud.c0 ?? 1, c1 = hud.c1 ?? 1;
+    const playing = s.phase === 'playing';
+    const single = playing && s.mode === 'single';
+    const multi = playing && (s.mode === 'local' || s.mode === 'p2p');
+
+    let p1Name = 'Player 1', p2Name = 'Player 2', p1Controls = '', p2Controls = '', multiHint = '';
+    if (s.mode === 'local') {
+      p1Controls = 'A / D move · W or Space drop';
+      p2Controls = '← / → move · ↑ or Enter drop';
+      multiHint = 'Share the keyboard — highest score when both top out wins!';
+    } else if (s.mode === 'p2p') {
+      p1Name = this.myIdx === 0 ? 'You' : 'Opponent';
+      p2Name = this.myIdx === 1 ? 'You' : 'Opponent';
+      const mine = this.myIdx === 0 ? 'p1' : 'p2';
+      p1Controls = this.myIdx === 0 ? 'Mouse / ← → · Space to drop' : 'opponent';
+      p2Controls = this.myIdx === 1 ? 'Mouse / ← → · Space to drop' : 'opponent';
+      multiHint = 'Online duel — boards & scores sync live over WebRTC.';
+    }
+
+    const netColor = s.netStatusKind === 'err' ? '#C9553F' : s.netStatusKind === 'ok' ? '#4F9A6B' : '#B99C82';
+    const canRematch = s.mode !== 'p2p' || this.myIdx === 0;
+
     return {
-      score: this.state.score,
-      best: this.state.best,
-      gameOver: this.state.gameOver,
-      canvasRef: this.canvasRef,
-      restart: this.restart,
-      nextColor: nt.color,
-      nextSizePx: Math.round(nt.r * 1.4) + 'px',
-      combo: this.state.combo,
-      comboBg: this.state.combo >= 2 ? '#F5EDFF' : '#FFFFFF',
-      paused: this.state.paused,
+      // header
+      muteLabel: s.muted ? '🔇 Muted' : '🔊 Sound',
+      toggleMute: this.toggleMute,
+      showExit: s.phase === 'playing',
+      backToMenu: this.backToMenu,
+      // screens
+      showMenu: s.phase === 'menu',
+      showHost: s.phase === 'host',
+      showJoin: s.phase === 'join',
+      showSingle: single,
+      showMulti: multi,
+      // menu
+      startSingle: this.startSingle,
+      startLocal: this.startLocal,
+      openHost: this.openHost,
+      openJoin: this.openJoin,
+      // net UI
+      refHostCode: this.refHostCode,
+      refHostAnswer: this.refHostAnswer,
+      refJoinCode: this.refJoinCode,
+      refJoinAnswer: this.refJoinAnswer,
+      copyHost: this.copyHost,
+      copyJoin: this.copyJoin,
+      hostConnect: this.hostConnect,
+      joinReply: this.joinReply,
+      netStatus: s.netStatus,
+      netStatusColor: netColor,
+      // canvases
+      refSingle: this.refSingle,
+      refMulti0: this.refMulti0,
+      refMulti1: this.refMulti1,
+      // shared HUD
+      p1Score: hud.s0 ?? 0,
+      p2Score: hud.s1 ?? 0,
+      p1Combo: c0,
+      p2Combo: c1,
+      p1ComboBg: c0 >= 2 ? '#F5EDFF' : '#FFFFFF',
+      best: hud.best ?? 0,
+      p1NextColor: nt0.color,
+      p1NextSizePx: Math.round(nt0.r * 1.4) + 'px',
+      p1Name, p2Name, p1Controls, p2Controls, multiHint,
+      p1TitleColor: '#E5735C',
+      p2TitleColor: '#8E72E0',
+      // pause / result
+      paused: s.paused,
       togglePause: this.togglePause,
-      pauseLabel: this.state.paused ? '▶ Resume' : '⏸ Pause'
+      pauseLabel: s.paused ? '▶ Resume' : '⏸ Pause',
+      showResult: s.showResult,
+      resultTitle: s.resultTitle,
+      resultSub: s.resultSub,
+      rematch: this.rematch,
+      canRematch,
+      waitRematch: s.mode === 'p2p' && this.myIdx !== 0
     };
   }
 }

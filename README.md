@@ -25,6 +25,25 @@ the dashed danger line and it's game over.
 
 Your best score is saved locally in the browser.
 
+## Game Modes
+
+Pick a mode from the start menu:
+
+- **1 Player** — the classic solo run (mouse / touch to aim, click / tap or `Space` to drop).
+- **2 Players · same keyboard** — two boards side by side on one keyboard (modelled on
+  [Stack Duel](https://github.com/freaxnx01/game-stack-duel)). Play simultaneously; the
+  higher score once **both** players top out wins.
+  - Player 1: `A` / `D` to move, `W` or `Space` to drop.
+  - Player 2: `←` / `→` to move, `↑` or `Enter` to drop.
+- **Play online (P2P)** — a **serverless** two-player duel over WebRTC (same manual
+  offer/answer signalling as `game-tschau-sepp` / Stack Duel). One player **hosts** and
+  shares an invite code; the other **joins**, pastes it, and sends a reply code back.
+  No server, no accounts — just swap the two codes. Both boards, scores and Frenzy-Bomb
+  state stay in sync live over the peer connection. On your own board: mouse / `← →` to
+  aim, `Space` to drop.
+
+`P` / `Esc` pauses (solo & local), `M` toggles sound.
+
 ## Tech
 
 - **Single self-contained `index.html`.** All game logic, Canvas 2D rendering, physics,
