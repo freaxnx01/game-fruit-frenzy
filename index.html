@@ -6,6 +6,7 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<script src="./version.js"></script>
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -226,6 +227,8 @@ a { color: #E5735C; } a:hover { color: #C9553F; }
      just before </body>. See docs/superpowers/specs/2026-07-13-game-card-feedback-star-design.md
      for design rationale. -->
 <nav id="game-nav" aria-label="Game navigation" style="position:fixed;right:10px;bottom:8px;z-index:2147483647;display:flex;gap:12px;align-items:center;font:600 13px/1.4 system-ui,-apple-system,sans-serif;padding:6px 11px;border-radius:8px;background:rgba(15,17,26,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:.55;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55">
+  <span id="version-badge" title="Version" style="color:#5a6072"></span>
+  <span style="color:#5a6072" aria-hidden="true">·</span>
   <a href="https://github.freaxnx01.ch/games/" style="color:#8fd8e8;text-decoration:none">More Games…</a>
   <span style="color:#5a6072" aria-hidden="true">·</span>
   <a href="https://github.com/freaxnx01/game-fruit-frenzy" target="_blank" rel="noopener" style="color:#8fd8e8;text-decoration:none">Source</a>
@@ -1142,6 +1145,27 @@ class Component extends DCLogic {
   }
 }
 
+</script>
+<script>
+  (function () {
+    // This app's boot process replaces the <x-dc> subtree (including the
+    // static #version-badge span) with a freshly React-rendered tree once
+    // it boots on DOMContentLoaded, which happens *after* this script runs
+    // during initial parsing. Poll briefly so the badge text survives that
+    // swap instead of being set once on a node that gets discarded.
+    function setBadge() {
+      var el = document.getElementById('version-badge');
+      if (el) el.textContent = 'v' + (window.GAME_VERSION || '0.0.0');
+      return !!el;
+    }
+    setBadge();
+    var tries = 0;
+    var iv = setInterval(function () {
+      tries++;
+      setBadge();
+      if (tries > 40) clearInterval(iv);
+    }, 250);
+  })();
 </script>
 </body>
 </html>
