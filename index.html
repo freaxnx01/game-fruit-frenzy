@@ -1155,8 +1155,22 @@ class Component extends DCLogic {
     // swap instead of being set once on a node that gets discarded.
     function setBadge() {
       var el = document.getElementById('version-badge');
-      if (el) el.textContent = 'v' + (window.GAME_VERSION || '0.0.0');
-      return !!el;
+      if (!el) return false;
+      var v = 'v' + (window.GAME_VERSION || '0.0.0');
+      var a = el.querySelector('a');
+      if (!a) {
+        a = document.createElement('a');
+        a.href = 'https://github.com/freaxnx01/game-fruit-frenzy/blob/main/CHANGELOG.md';
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.title = 'Changelog';
+        a.style.color = 'inherit';
+        a.style.textDecoration = 'none';
+        el.textContent = '';
+        el.appendChild(a);
+      }
+      a.textContent = v;
+      return true;
     }
     setBadge();
     var tries = 0;
